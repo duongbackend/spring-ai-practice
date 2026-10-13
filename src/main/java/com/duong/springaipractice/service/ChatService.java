@@ -1,10 +1,13 @@
 package com.duong.springaipractice.service;
 
 import com.duong.springaipractice.dto.request.ChatRequest;
+import com.duong.springaipractice.dto.request.QuizRequest;
 import com.duong.springaipractice.dto.request.TranslationRequest;
+import com.duong.springaipractice.dto.response.CourseQuizResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -27,8 +30,8 @@ public class ChatService {
 
     public ChatService(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory) {
         this.chatClient = chatClientBuilder
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory)
-                        .build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(new SimpleLoggerAdvisor())
                 .build();
     }
 
@@ -62,5 +65,38 @@ public class ChatService {
                 .system(systemResource)
                 .call()
                 .content();
+    }
+
+    public CourseQuizResponse generateCourseQuiz(QuizRequest request){
+        String conversationId = "2";
+        String template = """
+                Bạn là một chuyên gia giáo dục. Hãy tạo ra một bộ câu hỏi trắc nghiệm (quiz) chất lượng cao bằng tiếng Việt về chủ đề: "<topic>".
+                Yêu cầu:
+                - Độ khó mong muốn: <difficulty>
+                - Số lượng câu hỏi: <numberOfQuestions> câu hỏi.
+                - Đối với mỗi câu hỏi, hãy cung cấp đúng 4 phương án lựa chọn (A, B, C, D), xác định một đáp án đúng
+                  duy nhất (chỉ trả về một trong các chữ cái viết hoa "A", "B", "C" hoặc "D") và phần giải thích (explanation)
+                  lý do tại sao đáp án đó đúng một cách cặn kẽ.
+                - Tự động đặt một tiêu đề ngắn gọn, phù hợp cho bài học (lessonTitle) dựa trên chủ đề được cung cấp.
+                """;
+        PromptTemplate promptTemplate = PromptTemplate.builder()
+                .renderer(StTemplateRenderer.builder()
+                        .startDelimiterToken('<')
+                        .endDelimiterToken('>')
+                        .build())
+                .template(template)
+                .build();
+
+        String prompt = promptTemplate.render(Map.of(
+                "topic", request.topic(),
+                "difficulty", request.difficulty(),
+                "numberOfQuestions", request.numberOfQuestions()
+        ));
+
+        return chatClient.prompt(prompt)
+                .system(systemResource)
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .call()
+                .entity(CourseQuizResponse.class);
     }
 }

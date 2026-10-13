@@ -1,7 +1,9 @@
 package com.duong.springaipractice.controller;
 
 import com.duong.springaipractice.dto.request.ChatRequest;
+import com.duong.springaipractice.dto.request.QuizRequest;
 import com.duong.springaipractice.dto.request.TranslationRequest;
+import com.duong.springaipractice.dto.response.CourseQuizResponse;
 import com.duong.springaipractice.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,5 +25,10 @@ public class ChatController {
     @PostMapping("/translation")
     public String translation(@RequestBody TranslationRequest request){
         return chatService.translation(request);
+    }
+
+    @PostMapping("/generate-quiz")
+    public CourseQuizResponse generateQuiz(@RequestBody QuizRequest request){
+        return chatService.generateCourseQuiz(request);
     }
 }
