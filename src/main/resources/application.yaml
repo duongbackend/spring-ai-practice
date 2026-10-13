@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: spring-ai-practice
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/spring-ai
+    username: postgres
+    password: 123456
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: https://api.groq.com/openai/v1
+      chat:
+        model: openai/gpt-oss-120b
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always

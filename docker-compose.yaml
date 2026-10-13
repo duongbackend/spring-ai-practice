@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:18.4
+    container_name: postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: spring-ai
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres "]
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    networks:
+      - spring-ai-network
+
+volumes:
+  postgres-data:
+
+networks:
+  spring-ai-network:
